@@ -1,77 +1,56 @@
 package main
 
 import (
-	"context"
-	"log"
+	"runtime"
 
-	"github.com/Alex-omosa/pricing-service/app"
+	app "github.com/Alex-omosa/go-shared/app"
+	db "github.com/Alex-omosa/go-shared/db"
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/micro"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.opentelemetry.io/otel"
-
 	"go.uber.org/zap"
-
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-var tracer = otel.Tracer("gin-server")
-var traceProvider *sdktrace.TracerProvider
+const mongoURI = "mongodb+srv://trip-service:j0zUuoeXMGHMmtrj@taxi-app.bbjceer.mongodb.net/?retryWrites=true&w=majority&appName=taxi-app"
+
 var logger *zap.Logger
-var appconfig app.AppConfig
 var mongoClient *mongo.Client
-var natsConn *nats.Conn
 var redisClient *redis.Client
+var natsConn *nats.Conn
 
 func init() {
-	app.InitializeConfig(&appconfig)                          // Initialize the app configuration
-	logger = app.InitializeLogger()                           // Initialize the logger
-	traceProvider = app.InitializeTracer()                    // Initialize the tracer
-	mongo, err := app.CreateMongodbClient(appconfig.MongoURL) // Initialize the mongo client
-	if err != nil {
-		logger.Fatal("Failed to connect to MongoDB", zap.Error(err))
-	}
-	mongoClient = mongo
+	// Initialize the logger
+	logger = app.InitializeLogger()
 
-	nats, err := app.ConnectNats(appconfig.NatsUrl) // Initialize the nats connection
-	if err != nil {
-		logger.Fatal("Failed to connect to Nats", zap.Error(err))
-	}
+	mongoClient, _ = db.CreateMongodbClient(mongoURI)
 
-	natsConn = nats
+	natsConn = app.ConnectNats("nats://localhost:4222")
 
-	//-----------------Initialize the redis client----------------
-	redisClient = redis.NewClient(&redis.Options{ //Redis client
-		Addr:     appconfig.RedisUrl,
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-	if redisClient == nil {
-		logger.Fatal("Failed to connect to Redis")
-	}
+}
 
+type App struct {
+	Logger      *zap.Logger
+	MongoClient *mongo.Client
+	RedisClient *redis.Client
 }
 
 func main() {
-	app := app.App{
+	app := App{
 		Logger:      logger,
-		Tracer:      tracer,
 		MongoClient: mongoClient,
-		NatsConn:    natsConn,
 		RedisClient: redisClient,
 	}
 
-	err := app.Start()
+	_, err := micro.AddService(natsConn, micro.Config{
+		Name:        "trip-service",
+		Version:     "1.0.0",
+		Description: "This is a trip service",
+	})
 	if err != nil {
-		logger.Error("Failed to initialize app", zap.Error(err))
+		logger.Error("Error adding service", zap.Error(err))
 	}
 
-	cleanup()
-}
-
-func cleanup() {
-	logger.Info("Shutting down...")
-	if err := traceProvider.Shutdown(context.Background()); err != nil {
-		log.Printf("Error shutting down tracer provider: %v", err)
-	}
+	app.Logger.Info("Application started successfully")
+	runtime.Goexit()
 }
