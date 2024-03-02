@@ -3,7 +3,10 @@ module github.com/Alex-omosa/pricing-service
 go 1.21.0
 
 require (
+	github.com/Alex-omosa/go-shared v0.0.0-20240229235506-8d81b06d94a1
 	github.com/gin-gonic/gin v1.9.1
+	github.com/golang/protobuf v1.5.3
+	github.com/nats-io/nats.go v1.33.1
 	github.com/redis/go-redis/v9 v9.4.0
 	go.mongodb.org/mongo-driver v1.13.1
 	go.opentelemetry.io/otel/trace v1.22.0
@@ -11,7 +14,7 @@ require (
 )
 
 require (
-	github.com/Alex-omosa/go-shared v0.0.0-20240229235506-8d81b06d94a1 // indirect
+	github.com/Alex-omosa/protos v0.0.0-20240302003658-a945d6dda55a
 	github.com/bytedance/sonic v1.10.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
@@ -35,9 +38,10 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
-	github.com/nats-io/nats.go v1.33.1 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
+	github.com/onsi/gomega v1.31.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

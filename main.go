@@ -5,11 +5,13 @@ import (
 
 	app "github.com/Alex-omosa/go-shared/app"
 	db "github.com/Alex-omosa/go-shared/db"
+	trippb "github.com/Alex-omosa/protos/protos/trip-service"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/micro"
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 const mongoURI = "mongodb+srv://trip-service:j0zUuoeXMGHMmtrj@taxi-app.bbjceer.mongodb.net/?retryWrites=true&w=majority&appName=taxi-app"
@@ -20,6 +22,7 @@ var redisClient *redis.Client
 var natsConn *nats.Conn
 
 func init() {
+
 	// Initialize the logger
 	logger = app.InitializeLogger()
 
@@ -42,7 +45,7 @@ func main() {
 		RedisClient: redisClient,
 	}
 
-	_, err := micro.AddService(natsConn, micro.Config{
+	srv, err := micro.AddService(natsConn, micro.Config{
 		Name:        "trip-service",
 		Version:     "1.0.0",
 		Description: "This is a trip service",
@@ -51,6 +54,11 @@ func main() {
 		logger.Error("Error adding service", zap.Error(err))
 	}
 
+	srv.AddEndpoint("payment", micro.HandlerFunc(func(msg micro.Request) {
+		trip := trippb.Trip{}
+
+		proto.Unmarshal(msg.Data(), &trip)
+	}))
 	app.Logger.Info("Application started successfully")
 	runtime.Goexit()
 }
